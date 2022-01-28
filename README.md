@@ -1,2 +1,0 @@
-# Nurbilprep
-Nurbilprep Algo codes

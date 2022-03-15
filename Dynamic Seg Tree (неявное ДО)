@@ -1,0 +1,83 @@
+//Solution by Tima
+#pragma GCC optimize("Ofast")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,avx,avx2")
+#include <bits/stdc++.h>
+ 
+#define f first
+#define s second
+#define ll long long
+#define ull unsigned long long
+#define mp make_pair
+#define pb push_back
+#define vi vector <int>
+#define ld long double
+#define pii pair<int, int>
+#define y1 sda
+#define all(x) x.begin(), x.end()
+ 
+using namespace std;    
+const int N = int(1e5) + 12, mod = int(1e9)  + 7; 
+
+struct ST{
+    int tl,int tr;
+    ST *l, *r;
+    int mn;
+    
+    ST(int a,int b){
+        tl = a,tr = b;
+        mn = inf;
+        l = r = NULL;
+    }
+    
+    void update(int pos, int x){
+        mn = min(mn, x);
+        if(tl == tr){
+            return;
+        }
+        int tm = (tl + tr) / 2;
+        if(pos <= tm){
+            if(!l) l = new ST(tl, tm);
+            l->update(pos, x);
+        }
+        else{
+            if(!r) r = new ST(tm + 1, tr);
+            r->update(pos, x);    
+        }
+    }
+    
+    int get(int L,int R){
+        if(L > tr || tl > R) return inf;
+        if(L <= tl && tr <= R) return mn;
+        return min((l ? l->get(L,R) : inf), (r ? r->get(L,R) : inf));
+    }
+} *t[4*N];
+
+void upd(int v,int tl, int tr,int r, int l,int i){
+    if(!t[v]) t[v] = new ST(1, n);
+    t[v]->update(l, i);
+    if(tl == tr) return;
+    int tm = (tl + tr) >> 1;
+    if(r <= tm) upd(v + v, tl, tm, r, l, i);
+    else upd(v + v + 1, tm + 1, tr, r, l, i);
+}
+
+void add(int l, int r,int i){
+    upd(1,1,n,r,l, i);
+}
+
+int get(int v,int tl,int tr,int l1, int r1,int l2,int r2){
+    if(l1 > tr || tl > r1) return;
+    if(l1 <= tl && tr <= r){
+        return t[v] ? t[v]->get(l2, r2) : inf;  
+    }
+    int tm = (tl + tr) >> 1;
+    return min(get(v + v, tl, tm, l1, r1, l2, r2), get(v + v + 1, tm + 1, tr, l1, r1,l2, r2));
+}
+
+int get(int L,int R){
+    return get(1, 1, n, 1, R, L, n);
+}
+
+int main{
+
+}

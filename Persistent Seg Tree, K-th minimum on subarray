@@ -1,0 +1,90 @@
+// Задача: К-ый минимум на отрезке a[l...r]
+ 
+const int N = 1e5 + 10;
+ll n, q, a[N], t[N * 21], lv[N * 21], rv[N * 21], root[N], cur;
+ 
+// lv[v] - левый сын вершины v
+// rv[v] - правый сын вершины v
+// root[i] - корень дерева i-ой версии 
+ 
+void build(ll &v, ll tl = 1, ll tr = n) {
+    // Если вершина еще не создана, то создаем
+    if (!v) v = ++ cur;
+ 
+    if (tl == tr) return;
+ 
+    ll tm = (tl + tr) / 2;
+ 
+    //Заполняем остальные вершины
+    build(lv[v], tl, tm);
+    build(rv[v], tm + 1, tr);
+}
+ 
+void upd(ll &v, ll prev, ll pos, ll tl = 1, ll tr = n) {
+    if (!v) v = ++ cur;
+ 
+    // Обновление листа
+    if (tl == tr) {
+        // Новая версия вершины равна старой версии +1 
+        t[v] = t[prev] + 1;
+        return;
+    }
+ 
+    ll tm = (tl + tr) / 2;
+    if (pos <= tm) {
+        // Так как нам нужно обновить лист в левой части, правая часть останется неизменной, то есть она останется от старой версии
+        rv[v] = rv[prev];
+        upd(lv[v], lv[prev], pos, tl, tm); 
+    } else {
+        // То же самое что и справой частью, но только с левой
+        lv[v] = lv[prev];
+        upd(rv[v], rv[prev], pos, tm + 1, tr);
+    }
+    t[v] = t[lv[v]] + t[rv[v]];
+}
+ 
+ll get(ll v, ll l, ll r, ll tl = 1, ll tr = n) {
+    if (r < tl || tr < l) return 0;
+    if (l <= tl && tr <= r) return t[v];
+    ll tm = (tl + tr) / 2;
+    return get(lv[v], l, r, tl, tm) + get(rv[v], l, r, tm + 1, tr);
+}
+ 
+const void solve(/*Armashka*/) {
+    // Ввод
+    cin >> n >> q;
+    for (int i = 1; i <= n; ++ i) cin >> a[i];
+ 
+    // Создание изначального дерева
+    build(root[0]);
+ 
+    // Нужно сжать элементы массива чтобы в дальнейшем работать с ними 
+    vector <ll> v;
+    for (int i = 1; i <= n; ++ i) v.pb(a[i]);
+    sort(all(v)); 
+    v.erase(unique(all(v)), v.end());
+    for (int i = 1; i <= n; ++ i) {
+        a[i] = lower_bound(all(v), a[i]) - v.begin() + 1;
+    }
+ 
+    for (int i = 1; i <= n; ++ i) {
+        // Создаем новую версию дерева на префикс i, за прототип возьмем версию (i - 1) и обновляем значение на позиций a[i] в сжатом виде
+        upd(root[i], root[i - 1], a[i]);
+    }
+ 
+    while (q --) {
+        ll i, j, k;
+        cin >> i >> j >> k;
+        ll l = 1, r = n, ans = -1;
+        while (l <= r) {
+            ll mid = (l + r) / 2;
+            // Так как нужно посчитать количество чисел меньше либо равных mid, мы выполняем следующее:
+            // cnt[j][1...mid] - cnt[i - 1][1...mid], но только мы делаем это оптимально и отвечаем за O(log n)
+            ll s1 = get(root[j], 1, mid), s2 = get(root[i - 1], 1, mid);
+            if (s1 - s2 >= k) r = mid - 1, ans = mid;
+            else l = mid + 1;
+        }
+        // Выводим ответ, так как у нас ответ в сжатом виде, выводим элемент вектора на позиции (ans - 1)
+        cout << v[ans - 1] << "\n";
+    }
+}
